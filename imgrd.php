@@ -25,6 +25,9 @@ class Imgrd {
 		$this->gridWidth = $width + $margin;
 		$this->gridMargin = $margin;
 
+		// prevent division by zero
+		$images_per_row = ($images_per_row > 1)? $images_per_row : 2;
+
 		// heuristic base image width
 		$this->imgWidth = (int) ($this->gridWidth / ($images_per_row - 1));
 		// assuming most pictures have a proportion of 4:3
