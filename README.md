@@ -1,8 +1,7 @@
 kirby-imgrd
 ===========
 
-A server based solution to create a gridview for images in Kirby.
-This plugin will create a Google+ style image grid from any images collection.
+A server based solution to create a gridview for images in Kirby. This plugin will create a Google+ style image grid from any images collection. It will create thumbnails so that portrait and landscape oriented photos will all be shown in their original proportions, but every image in a row will have the same height and each row will have the same overall width.
 
 ## Requirements
 You need to have the [Thumb plugin](https://github.com/bastianallgeier/kirbycms-extensions/tree/master/plugins/thumb) installed in your Kirby system.
@@ -67,5 +66,7 @@ Naturally, you have to clear the content, e.g. with clearfix:
 ## Output
 The plugin will create links to the original with the class `fancybox` and the relation `gallery`. As a result, you can use the jQuery [FancyBox](http://fancyapps.com/fancybox/) to create a nice gallery.
 
-## License
-You can use the code and alter it to your needs as you like. Feel free to fork the repo and send pull requests.
+## License and Contact
+You can use the code and alter it to your needs as you like. Feel free to fork the repo and send pull requests. Don't claim it as your own, please!
+
+Follow me [@chrstphbach](https://twitter.com/chrstphbach) for updates. I would love to see some projects that make use of my plugin!
