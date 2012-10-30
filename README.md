@@ -10,10 +10,10 @@ You need to have the [Thumb plugin](https://github.com/bastianallgeier/kirbycms-
 Just copy the `imgrd.php` into your `site/plugins/` folder. To use the plugin, you have to call the `imgrd` function in your template. The parameters are as follows:
 
 ```php
-imgrd($images, $gridWidth, $margin, $images_per_row)
+imgrd($images, $gridWidth, $margin, $images_per_row, $crop_last = false)
 ```
 
-Note that `$images_per_row` is not an exact number but rather an average number of images per row. So if the value is set to three, there will fit in two landscape, or two portrait and one landscape or four portrait oriented images.
+Note that `$images_per_row` is not an exact number but rather an average number of images per row. So if the value is set to three, there will fit in two landscape, or two portrait and one landscape or four portrait oriented images. `$crop_last` is optional. Setting it to *true* will force the last image to fit in to the row so that the row has the full width even if there aren't enough images left to complete it.
 
 An example template for the standard Kirby theme could be:
 

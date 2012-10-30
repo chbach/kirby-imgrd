@@ -6,8 +6,8 @@
  *
 **/
 
-function imgrd ($images, $width, $margin, $images_per_row) {
-	$imgrd = new Imgrd($images, $width, $margin, $images_per_row);
+function imgrd ($images, $width, $margin, $images_per_row, $crop_last = false) {
+	$imgrd = new Imgrd($images, $width, $margin, $images_per_row, $crop_last);
 	$imgrd->grid();
 }
 
@@ -16,14 +16,16 @@ class Imgrd {
 	private $gridWidth = 0;
 	private $gridMargin = 0;
 	private $originals = array();
+	private $crop_last = false;
 
 	private $imgWidth = 0;
 	private $imgHeight = 0;
 
-	function __construct($images, $width, $margin, $images_per_row) {
+	function __construct($images, $width, $margin, $images_per_row, $crop_last) {
 		$this->images = $images;
 		$this->gridWidth = $width + $margin;
 		$this->gridMargin = $margin;
+		$this->crop_last = $crop_last;
 
 		// prevent division by zero
 		$images_per_row = ($images_per_row > 1)? $images_per_row : 2;
@@ -108,7 +110,7 @@ class Imgrd {
 				$fixedHeight = $img->height();
 
 			// last element will be cropped to pixel-perfect size
-			if ($i == count($row)-1 && $scaleFactor < 1) {
+			if ($i == count($row)-1 && ($scaleFactor < 1 || $this->crop_last)) {
 				$fittedWidth = $this->gridWidth - $margin - $realWidth;
 				$img->info()->width = $fittedWidth;
 			}
@@ -135,10 +137,10 @@ class Imgrd {
 				);
 
 			// modifiy markup here
-			echo "<a href=\"".$this->originals[$key]->url()."\"
+			echo "<figure><a href=\"".$this->originals[$key]->url()."\"
 			      class=\"fancybox\" rel=\"gallery\">\n";
-			echo thumb($this->originals[$key], $options);
-			echo "</a>\n";
+			echo thumb($this->originals[$key], $options)."\n";
+			echo "<figcaption class=\"caption\">".$this->originals[$key]->name()."</figcaption></a></figure>\n";
 		}
 	}
 
