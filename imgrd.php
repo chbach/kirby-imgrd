@@ -6,34 +6,60 @@
  *
 **/
 
-function imgrd ($images, $width, $margin, $images_per_row, $crop_last = false) {
-	$imgrd = new Imgrd($images, $width, $margin, $images_per_row, $crop_last);
-	$imgrd->grid();
+function imgrd ($images, $options = array()) {
+
+	$default = array(
+		'width' => 450,
+		'margin' => 10,
+		'imagesPerRow' => 3,
+		'cropLast' => false,
+		'rowsPerPage' => 0
+	);
+
+	$options = array_merge($default, $options);
+
+	$imgrd = new Imgrd($images, $options);
+
+	return $imgrd;
 }
 
 class Imgrd {
 	private $images = array();
-	private $gridWidth = 0;
-	private $gridMargin = 0;
+	private $rows = array();
+	private $gridWidth;
+	private $gridMargin;
 	private $originals = array();
-	private $crop_last = false;
+	private $cropLast;
+	private $imagesPerRow;
+	private $rowsPerPage;
 
 	private $imgWidth = 0;
 	private $imgHeight = 0;
+	private $page = 0;
 
-	function __construct($images, $width, $margin, $images_per_row, $crop_last) {
+	function __construct($images, $options) {
 		$this->images = $images;
-		$this->gridWidth = $width + $margin;
-		$this->gridMargin = $margin;
-		$this->crop_last = $crop_last;
+		$this->gridWidth = $options['width'] + $options['margin'];
+		$this->gridMargin = $options['margin'];
+		$this->cropLast = $options['cropLast'];
+		$this->imagesPerRow = $options['imagesPerRow'];
+		$this->rowsPerPage = $options['rowsPerPage'];
+
+		global $site;
+		$this->page = ($site->uri()->params('page') > 0)? $site->uri->params('page') : 1;
+
+		$this->page--;
 
 		// prevent division by zero
-		$images_per_row = ($images_per_row > 1)? $images_per_row : 2;
+		$imagesPerRow = ($options['imagesPerRow'] > 1)? $options['imagesPerRow'] : 2;
 
 		// heuristic base image width
-		$this->imgWidth = (int) ($this->gridWidth / ($images_per_row - 1));
+		$this->imgWidth = (int) ($this->gridWidth / ($imagesPerRow - 1));
 		// assuming most pictures have a proportion of 4:3
 		$this->imgHeight = (int) ($this->imgWidth / 4 * 3);
+
+		// create the basic grid
+		$this->grid();
 	}
 
 	/**
@@ -64,12 +90,99 @@ class Imgrd {
 			// begin new row if current one is overfull
 			if ($rowWidth-$this->gridMargin >= $this->gridWidth
 					|| $i == $images->count()-1) {
-				$this->fitRow($row, $rowWidth);
+
+				$this->rows[] = array(
+						'images' => $row,
+						'width' => $rowWidth
+					);
+
 				$row = array();
 				$rowWidth = 0;
 			}
 
 			$i++;
+		}
+	}
+
+	/**
+	 * returns the next pages's URL
+	**/
+	public function getNextURL() {
+		global $site;
+
+		return ($this->hasNext())? $site->url()."/".$site->uri()->path()."/page:".($this->page + 2) : false;
+	}
+
+	/**
+	 * @return the previous pages's URL
+	**/
+	public function getPreviousURL() {
+		global $site;
+		if ($this->page === 1)
+			return $site->url()."/".$site->uri()->path();
+		else
+			return ($this->hasPrevious())? $site->url()."/".$site->uri()->path()."/page:".($this->page) : false;
+	}
+
+	/**
+	 * @return true if there's a previous page.
+	**/
+	public function hasPrevious() {
+		return (bool) ($this->page > 0);
+	}
+
+	/**
+	 * @return true if there's another page
+	**/
+	public function hasNext() {
+		if ($this->rowsPerPage < 1) {
+			return false;
+		} else {
+			return (bool) ($this->page + 1 < $this->countPages());
+		}
+	}
+
+	/**
+	 * @return number of pages
+	**/
+	public function countPages() {
+		if ($this->rowsPerPage > 0) {
+			$numRows = count($this->rows);
+			$add = ($numRows % $this->rowsPerPage > 0)? 1 : 0;
+
+			return ((int) ($numRows / $this->rowsPerPage) + $add);
+		}
+
+		return 1;
+	}
+
+	/**
+	 *	prints the grid.
+	**/
+	public function show() {
+		// print everything
+		if ($this->rowsPerPage < 1) {
+			$this->printRows(0, count($this->rows)-1);
+		} else {
+
+			$min = $this->page * $this->rowsPerPage;
+			$max = $min + $this->rowsPerPage;
+
+			if ($min < count($this->rows)) {
+				$this->printRows($min, $max);
+			}
+		}
+	}
+
+	/**
+	 * prints rows from $start to $end
+	**/
+	private function printRows($start, $end) {
+		$start = max(0, $start);
+		$end = min($end, count($this->rows)-1);
+
+		for ($i = $start; $i <= $end; $i++) {
+			$this->fitRow($this->rows[$i]['images'], $this->rows[$i]['width']);
 		}
 	}
 
@@ -110,7 +223,7 @@ class Imgrd {
 				$fixedHeight = $img->height();
 
 			// last element will be cropped to pixel-perfect size
-			if ($i == count($row)-1 && ($scaleFactor < 1 || $this->crop_last)) {
+			if ($i == count($row)-1 && ($scaleFactor < 1 || $this->cropLast)) {
 				$fittedWidth = $this->gridWidth - $margin - $realWidth;
 				$img->info()->width = $fittedWidth;
 			}
@@ -137,10 +250,10 @@ class Imgrd {
 				);
 
 			// modifiy markup here
-			echo "<figure><a href=\"".$this->originals[$key]->url()."\"
+			echo "<a href=\"".$this->originals[$key]->url()."\"
 			      class=\"fancybox\" rel=\"gallery\">\n";
 			echo thumb($this->originals[$key], $options)."\n";
-			echo "<figcaption class=\"caption\">".$this->originals[$key]->name()."</figcaption></a></figure>\n";
+			echo "</a>\n";
 		}
 	}
 
