@@ -169,7 +169,7 @@ class Imgrd {
 			$max = $min + $this->rowsPerPage;
 
 			if ($min < count($this->rows)) {
-				$this->printRows($min, $max);
+				$this->printRows($min, $max-1);
 			}
 		}
 	}
