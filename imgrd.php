@@ -110,7 +110,7 @@ class Imgrd {
 	public function getNextURL() {
 		global $site;
 
-		return ($this->hasNext())? $site->url()."/".$site->uri()->path()."/page:".($this->page + 2) : false;
+		return ($this->hasNext())? $site->uri()->path()."/page:".($this->page + 2) : false;
 	}
 
 	/**
@@ -119,9 +119,9 @@ class Imgrd {
 	public function getPreviousURL() {
 		global $site;
 		if ($this->page === 1)
-			return $site->url()."/".$site->uri()->path();
+			return $site->uri()->path();
 		else
-			return ($this->hasPrevious())? $site->url()."/".$site->uri()->path()."/page:".($this->page) : false;
+			return ($this->hasPrevious())? $site->uri()->path()."/page:".($this->page) : false;
 	}
 
 	/**
